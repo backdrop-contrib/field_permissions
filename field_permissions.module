@@ -3,7 +3,7 @@
 /**
  * @file
  * This is the main script for the Field Permissions module. It merely contains
- * the implementation of hooks invoked by Drupal core and CCK.
+ * the implementation of hooks invoked by Backdrop core and CCK.
  * All common functions are externalized into several scripts that are included
  * on demand to save memory consumption during normal site operation.
  */
@@ -104,12 +104,13 @@ function field_permissions_form_field_ui_field_edit_form_alter(&$form, &$form_st
  */
 function field_permissions_field_access($op, $field, $entity_type, $entity, $account) {
   // Ignore the request if permissions have not been enabled for this field.
-  if (!isset($field['field_permissions']['type']) || $field['field_permissions']['type'] == FIELD_PERMISSIONS_PUBLIC) {
+  dpm($field);
+  if (!isset($field['settings']['field_permissions']['type']) || $field['settings']['field_permissions']['type'] == FIELD_PERMISSIONS_PUBLIC) {
     return;
   }
   // If the field is private, then only the author (and administrators with the
   // 'access private fields' permissions) can view and edit it.
-  elseif ($field['field_permissions']['type'] == FIELD_PERMISSIONS_PRIVATE) {
+  elseif ($field['settings']['field_permissions']['type'] == FIELD_PERMISSIONS_PRIVATE) {
     if (isset($entity)) {
       return _field_permissions_entity_is_owned_by_account($entity, $account) || user_access('access private fields', $account);
     }
@@ -123,7 +124,7 @@ function field_permissions_field_access($op, $field, $entity_type, $entity, $acc
     }
   }
   // Otherwise, check access by permission.
-  elseif ($field['field_permissions']['type'] == FIELD_PERMISSIONS_CUSTOM) {
+  elseif ($field['settings']['field_permissions']['type'] == FIELD_PERMISSIONS_CUSTOM) {
     if (!isset($entity)) {
       return field_permissions_empty_entity_access($op, $field['field_name'], $account);
     }

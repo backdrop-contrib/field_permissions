@@ -108,7 +108,7 @@ function _field_permissions_permission() {
   );
 
   foreach (field_info_fields() as $field) {
-    if (isset($field['field_permissions']['type']) && $field['field_permissions']['type'] == FIELD_PERMISSIONS_CUSTOM) {
+    if (isset($field['settings']['field_permissions']['type']) && $field['settings']['field_permissions']['type'] == FIELD_PERMISSIONS_CUSTOM) {
       $perms += field_permissions_list_field_permissions($field);
     }
   }
@@ -122,6 +122,7 @@ function _field_permissions_permission() {
 function _field_permissions_field_settings_form_alter(&$form, $form_state, $form_id) {
   // Put the field permissions extensions at the top of the field settings
   // fieldset.
+  dpm($form);
   $form['field']['field_permissions'] = array(
     '#weight' => -10,
     '#access' => user_access('administer field permissions'),
@@ -135,7 +136,7 @@ function _field_permissions_field_settings_form_alter(&$form, $form_state, $form
       FIELD_PERMISSIONS_PRIVATE => t('Private (only author and administrators can edit and view)'),
       FIELD_PERMISSIONS_CUSTOM => t('Custom permissions'),
     ),
-    '#default_value' => isset($form['#field']['field_permissions']['type']) ? $form['#field']['field_permissions']['type'] : FIELD_PERMISSIONS_PUBLIC,
+    '#default_value' => isset($form['#field']['settings']['field_permissions']['type']) ? $form['#field']['settings']['field_permissions']['type'] : FIELD_PERMISSIONS_PUBLIC,
   );
 
   // Add the container in which the field permissions matrix will be displayed.
@@ -145,14 +146,14 @@ function _field_permissions_field_settings_form_alter(&$form, $form_state, $form
     '#type' => 'container',
     '#states' => array(
       'visible' => array(
-        // We must cast this to a string until http://drupal.org/node/879580 is
+        // We must cast this to a string until http://backdrop.org/node/879580 is
         // fixed.
         ':input[name="field[field_permissions][type]"]' => array('value' => (string) FIELD_PERMISSIONS_CUSTOM),
       ),
     ),
     // Custom styling for the permissions matrix on the field settings page.
     '#attached' => array(
-      'css' => array(drupal_get_path('module', 'field_permissions') . '/field_permissions.admin.css'),
+      'css' => array(backdrop_get_path('module', 'field_permissions') . '/field_permissions.admin.css'),
     ),
   );
 
@@ -176,7 +177,7 @@ function _field_permissions_field_settings_form_alter(&$form, $form_state, $form
 /**
  * Returns a field permissions matrix that can be inserted into a form.
  *
- * The matrix's display is based on that of Drupal's default permissions page.
+ * The matrix's display is based on that of Backdrop's default permissions page.
  *
  * Note that this matrix must be accompanied by an appropriate submit handler
  * (attached to the top level of the form) in order for the permissions in it
@@ -205,7 +206,7 @@ function field_permissions_permissions_matrix($field, $instance) {
   $status = array();
 
   // Retrieve all role names for use in the submit handler.
-  $role_names = user_roles();
+  $role_names = user_roles(FALSE, NULL, TRUE);
   $form['role_names'] = array(
     '#type' => 'value',
     '#value' => $role_names,
@@ -213,7 +214,11 @@ function field_permissions_permissions_matrix($field, $instance) {
 
   // Retrieve the permissions for each role, and the field permissions we will
   // be assigning here.
-  $role_permissions = user_role_permissions($role_names);
+  foreach ($role_names as $key => $robject) {
+    foreach ($robject->permissions as $perm) {
+      $role_permissions[$key][$perm] = TRUE;
+    }
+  }
   $field_permissions = field_permissions_list_field_permissions($field, $instance['label']);
 
   // Determine if it is safe to reset the default values for this field's
@@ -222,10 +227,10 @@ function field_permissions_permissions_matrix($field, $instance) {
   // custom permissions and doesn't have any previously-saved ones already in
   // the database, then it will be safe to reset them.
   $reset_permissions_defaults = FALSE;
-  if (!isset($field['field_permissions']['type'])) {
+  if (!isset($field['settings']['field_permissions']['type'])) {
     $reset_permissions_defaults = TRUE;
   }
-  elseif ($field['field_permissions']['type'] != FIELD_PERMISSIONS_CUSTOM) {
+  elseif ($field['settings']['field_permissions']['type'] != FIELD_PERMISSIONS_CUSTOM) {
     $all_assigned_permissions = call_user_func_array('array_merge_recursive', $role_permissions);
     $assigned_field_permissions = array_intersect_key($all_assigned_permissions, $field_permissions);
     $reset_permissions_defaults = empty($assigned_field_permissions);
@@ -248,14 +253,14 @@ function field_permissions_permissions_matrix($field, $instance) {
     // defaults, we do so by pre-checking the admin role's checkbox for this
     // permission.
     if ($reset_permissions_defaults) {
-      if (($admin_rid = variable_get('user_admin_role', 0)) && isset($role_names[$admin_rid])) {
+      if (($admin_rid = config_get('system.core', 'user_admin_role')) && isset($role_names[$admin_rid])) {
         $status[$admin_rid][] = $permission;
       }
       // For fields attached to users, we also pre-check the anonymous user's
       // checkbox for the permission to create the field, since that is the
       // most common way in which new user entities are created.
       if ($instance['entity_type'] == 'user' && $permission == 'create ' . $field['field_name']) {
-        $status[DRUPAL_ANONYMOUS_RID][] = $permission;
+        $status[BACKDROP_ANONYMOUS_ROLE][] = $permission;
       }
     }
     // Otherwise (e.g., for fields with custom permissions already saved),
@@ -269,9 +274,9 @@ function field_permissions_permissions_matrix($field, $instance) {
       }
     }
   }
-
+    dpm($role_names);
   // Build the checkboxes for each role.
-  foreach ($role_names as $rid => $name) {
+  foreach (user_roles() as $rid => $name) {
     $form['checkboxes'][$rid] = array(
       '#type' => 'checkboxes',
       '#options' => $options,
@@ -282,10 +287,10 @@ function field_permissions_permissions_matrix($field, $instance) {
   }
 
   // Attach the default permissions page JavaScript.
-  $form['#attached']['js'][] = drupal_get_path('module', 'user') . '/user.permissions.js';
+  $form['#attached']['js'][] = backdrop_get_path('module', 'user') . '/user.permissions.js';
 
   // Attach our custom JavaScript for the permission matrix.
-  $form['#attached']['js'][] = drupal_get_path('module', 'field_permissions') . '/field_permissions.admin.js';
+  $form['#attached']['js'][] = backdrop_get_path('module', 'field_permissions') . '/field_permissions.admin.js';
 
   return $form;
 }
@@ -304,6 +309,7 @@ function _field_permissions_field_settings_form_pre_render($form) {
  * Form callback; Submit handler for the Field Settings form.
  */
 function _field_permissions_field_settings_form_submit($form, &$form_state) {
+  dpm($form_state['values']);
   // Save the field permissions when appropriate to do so.
   $new_field_permissions_type = $form_state['values']['field']['field_permissions']['type'];
   if ($new_field_permissions_type == FIELD_PERMISSIONS_CUSTOM && isset($form_state['values']['field_permissions']['permissions'])) {
@@ -312,6 +318,9 @@ function _field_permissions_field_settings_form_submit($form, &$form_state) {
       user_role_change_permissions($rid, $field_permissions['checkboxes'][$rid]);
     }
   }
+  $field = field_info_field($form_state['values']['instance']['field_name']);
+  $field['settings']['field_permissions']['type'] = $new_field_permissions_type;
+  field_update_field($field);
 
   // We must clear the page and block caches whenever the field permission type
   // setting has changed (because users may now be allowed to see a different
@@ -327,13 +336,13 @@ function _field_permissions_field_settings_form_submit($form, &$form_state) {
  * Menu callback; Field permissions overview.
  */
 function field_permissions_overview() {
-  drupal_add_css(drupal_get_path('module', 'field_permissions') .'/field_permissions.admin.css');
+  backdrop_add_css(backdrop_get_path('module', 'field_permissions') .'/field_permissions.admin.css');
 
   $headers = array(t('Field name'), t('Field type'), t('Entity type'), t('Used in'));
   foreach (field_permissions_list() as $permission_type => $permission_info) {
     $headers[] = array('data' => $permission_info['label'], 'class' => 'field-permissions-header');
   }
-  $destination = drupal_get_destination();
+  $destination = backdrop_get_destination();
 
   // Load list of field instances, types and bundles in the system.
   $instances = field_info_instances();
@@ -361,7 +370,7 @@ function field_permissions_overview() {
         $rows[$field_name]['class'] = $field['locked'] ? array('menu-disabled') : array('');
 
         // Append field permissions information to the report.
-        $type = isset($field['field_permissions']['type']) ? $field['field_permissions']['type'] : FIELD_PERMISSIONS_PUBLIC;
+        $type = isset($field['settings']['field_permissions']['type']) ? $field['settings']['field_permissions']['type'] : FIELD_PERMISSIONS_PUBLIC;
         foreach (array_keys(field_permissions_list_field_permissions($field)) as $index => $permission) {
           // Put together the data value for the cell.
           $data = '';
@@ -378,7 +387,7 @@ function field_permissions_overview() {
             // This is a field with custom permissions. Link the field to the
             // appropriate row of the permissions page, and theme it based on
             // whether all users have access.
-            $all_users_have_access = isset($role_permissions[DRUPAL_ANONYMOUS_RID][$permission]) && isset($role_permissions[DRUPAL_AUTHENTICATED_RID][$permission]);
+            $all_users_have_access = isset($role_permissions[BACKDROP_ANONYMOUS_ROLE][$permission]) && isset($role_permissions[BACKDROP_AUTHENTICATED_RID][$permission]);
             $status_class = $all_users_have_access ? 'field-permissions-status-on' : 'field-permissions-status-off';
             $title = $all_users_have_access ? t('All users have this permission') : t('Not all users have this permission');
             $data = l('', 'admin/people/permissions', array(
@@ -387,7 +396,7 @@ function field_permissions_overview() {
                 'title' => $title,
               ),
               'query' => $destination,
-              'fragment' => drupal_html_class("edit $permission"),
+              'fragment' => backdrop_html_class("edit $permission"),
             ));
           }
 
