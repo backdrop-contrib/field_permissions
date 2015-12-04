@@ -27,21 +27,6 @@ define('FIELD_PERMISSIONS_PRIVATE', 1);
 define('FIELD_PERMISSIONS_CUSTOM', 2);
 
 /**
- * Implements hook_help().
- */
-function field_permissions_help($path, $arg) {
-  switch ($path) {
-    // Main module help for the Field Permissions module.
-    case 'admin/help#field_permissions':
-      return '<p>' . t('Set field-level permissions to edit or view CCK fields in any node, edit field during node creation, and edit or view permissions for nodes owned by the current user.') . '</p>';
-
-    // Help for the Field Permissions overview page.
-    case 'admin/reports/fields/permissions':
-      return '<p>' . t('Report and troubleshoot field permissions.') . '</p>';
-  }
-}
-
-/**
  * Implements hook_menu().
  */
 function field_permissions_menu() {
@@ -104,7 +89,6 @@ function field_permissions_form_field_ui_field_edit_form_alter(&$form, &$form_st
  */
 function field_permissions_field_access($op, $field, $entity_type, $entity, $account) {
   // Ignore the request if permissions have not been enabled for this field.
-  // dpm($field);
   if (!isset($field['settings']['field_permissions']['type']) || $field['settings']['field_permissions']['type'] == FIELD_PERMISSIONS_PUBLIC) {
     return;
   }

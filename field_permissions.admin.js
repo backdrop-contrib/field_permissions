@@ -1,6 +1,6 @@
 (function ($) {
 
-Drupal.behaviors.fieldPermissionsSettings = {
+Backdrop.behaviors.fieldPermissionsSettings = {
   attach: function (context) {
     // For user fields, we want the "Create own value for field X" permission
     // row to only be displayed when it's meaningful (i.e., when the "Display
@@ -18,13 +18,13 @@ Drupal.behaviors.fieldPermissionsSettings = {
         // the create permissions, so we have rely on the fact that it will be
         // the first row.
         $create_permission_row = $('table#permissions tbody tr', context).filter(':first');
-        new Drupal.fieldPermissions.HideCreatePermission($user_register_form_checkbox, $required_field_checkbox, $create_permission_row);
+        new Backdrop.fieldPermissions.HideCreatePermission($user_register_form_checkbox, $required_field_checkbox, $create_permission_row);
       }
     }
   }
 };
 
-Drupal.fieldPermissions = {};
+Backdrop.fieldPermissions = {};
 
 /**
  * Constructor for the HideCreatePermission object.
@@ -33,7 +33,7 @@ Drupal.fieldPermissions = {};
  * for user fields when it is appropriate to do so, depending on the state of
  * the "Display on user registration form" and "Required field" checkboxes.
  */
-Drupal.fieldPermissions.HideCreatePermission = function ($user_register_form_checkbox, $required_field_checkbox, $create_permission_row) {
+Backdrop.fieldPermissions.HideCreatePermission = function ($user_register_form_checkbox, $required_field_checkbox, $create_permission_row) {
   this.$user_register_form_checkbox = $user_register_form_checkbox;
   this.$create_permission_row = $create_permission_row;
   // Start off by making sure the create permission row has the correct
@@ -48,7 +48,7 @@ Drupal.fieldPermissions.HideCreatePermission = function ($user_register_form_che
 /**
  * Set the correct visibility of the "Create own value for field X" permission.
  */
-Drupal.fieldPermissions.HideCreatePermission.prototype.setCreatePermissionVisibility = function () {
+Backdrop.fieldPermissions.HideCreatePermission.prototype.setCreatePermissionVisibility = function () {
   // Granting permissions for "Create own value for field X" only makes sense
   // when the field is configured to appear on the user registration form, so
   // only show the row in the permissions table then.
