@@ -122,7 +122,7 @@ function _field_permissions_permission() {
 function _field_permissions_field_settings_form_alter(&$form, $form_state, $form_id) {
   // Put the field permissions extensions at the top of the field settings
   // fieldset.
-  dpm($form);
+  // dpm($form);
   $form['field']['field_permissions'] = array(
     '#weight' => -10,
     '#access' => user_access('administer field permissions'),
@@ -274,7 +274,7 @@ function field_permissions_permissions_matrix($field, $instance) {
       }
     }
   }
-    dpm($role_names);
+    // dpm($role_names);
   // Build the checkboxes for each role.
   foreach (user_roles() as $rid => $name) {
     $form['checkboxes'][$rid] = array(
@@ -309,7 +309,7 @@ function _field_permissions_field_settings_form_pre_render($form) {
  * Form callback; Submit handler for the Field Settings form.
  */
 function _field_permissions_field_settings_form_submit($form, &$form_state) {
-  dpm($form_state['values']);
+  // dpm($form_state['values']);
   // Save the field permissions when appropriate to do so.
   $new_field_permissions_type = $form_state['values']['field']['field_permissions']['type'];
   if ($new_field_permissions_type == FIELD_PERMISSIONS_CUSTOM && isset($form_state['values']['field_permissions']['permissions'])) {

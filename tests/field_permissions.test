@@ -28,18 +28,18 @@ class FieldPermissionsTestCase extends BackdropWebTestCase {
     // Create test user.
     $admin_permissions = array('access content', 'administer nodes', 'bypass node access', 'administer content types', 'administer taxonomy', 'administer permissions', 'create page content');
     $this->limited_user = $this->backdropCreateUser($admin_permissions);
-    $all_rids = array_keys($this->limited_user->roles);
-    sort($all_rids);
+    $all_rids = $this->limited_user->roles;
     $this->limited_rid = array_pop($all_rids);
 
     $admin_permissions[] = 'administer field permissions';
     $admin_permissions[] = 'administer users';
     $this->admin_user = $this->backdropCreateUser($admin_permissions);
-    $all_rids = array_keys($this->admin_user->roles);
-    sort($all_rids);
+    $all_rids = $this->admin_user->roles;
     $this->admin_rid = array_pop($all_rids);
+    
 
     $this->backdropLogin($this->limited_user);
+    module_disable(array('path'));
   }
 
   function testPermissionsUI() {
@@ -127,9 +127,9 @@ class FieldPermissionsTestCase extends BackdropWebTestCase {
     // the 'access private fields' permission (tested here), and it also means
     // that when custom field permissions are created later on in this test,
     // the admin user will automatically get those permissions granted also.
-    $user_admin_rid = config_get('system.core', 'user_admin_rid');
+    $user_admin_role = config_get('system.core', 'user_admin_role');
     $edit = array(
-      "roles[$user_admin_rid]" => TRUE,
+      "roles[$user_admin_role]" => TRUE,
     );
     $this->backdropPost('user/' . $this->admin_user->uid . '/edit', $edit, t('Save'));
 
@@ -160,7 +160,7 @@ class FieldPermissionsTestCase extends BackdropWebTestCase {
     $this->assertRaw(t("View anyone's value for field %field", array('%field' => $field_info['name'])));
 
     // See if we have that exposed on the permissions UI as well now.
-    $this->backdropGet('admin/people/permissions');
+    $this->backdropGet('admin/config/people/permissions');
     $this->assertText(t('Field Permissions'));
     $this->assertRaw(t('Create own value for field %field', array('%field' => $field_info['name'])));
     $this->assertRaw(t('Edit own value for field %field', array('%field' => $field_info['name'])));
@@ -185,7 +185,7 @@ class FieldPermissionsTestCase extends BackdropWebTestCase {
     $edit = array(
       $this->limited_rid .'[create '. $field_info['machine_name'] .']' => TRUE,
     );
-    $this->backdropPost('admin/people/permissions', $edit, t('Save permissions'));
+    $this->backdropPost('admin/config/people/permissions', $edit, t('Save permissions'));
     $this->assertUserHasPermission($this->admin_user, 'create ' . $field_info['machine_name'], t('Admin user does have "create @field" permission.', array('@field' => $field_info['machine_name'])));
     $this->assertUserHasPermission($this->limited_user, 'create ' . $field_info['machine_name'], t('Limited user does have "create @field" permission.', array('@field' => $field_info['machine_name'])));
 
@@ -220,7 +220,7 @@ class FieldPermissionsTestCase extends BackdropWebTestCase {
     $edit = array(
       $this->limited_rid .'[view '. $field_info['machine_name'] .']' => TRUE,
     );
-    $this->backdropPost('admin/people/permissions', $edit, t('Save permissions'));
+    $this->backdropPost('admin/config/people/permissions', $edit, t('Save permissions'));
     $this->assertUserHasPermission($this->admin_user, 'view ' . $field_info['machine_name'], t('Admin user does have "view @field" permission.', array('@field' => $field_info['machine_name'])));
     $this->assertUserHasPermission($this->limited_user, 'view ' . $field_info['machine_name'], t('Limited user does have "view @field" permission.', array('@field' => $field_info['machine_name'])));
 
@@ -249,7 +249,7 @@ class FieldPermissionsTestCase extends BackdropWebTestCase {
     $edit = array(
       $this->limited_rid .'[edit '. $field_info['machine_name'] .']' => TRUE,
     );
-    $this->backdropPost('admin/people/permissions', $edit, t('Save permissions'));
+    $this->backdropPost('admin/config/people/permissions', $edit, t('Save permissions'));
     $this->assertUserHasPermission($this->admin_user, 'edit ' . $field_info['machine_name'], t('Admin user does have "edit @field" permission.', array('@field' => $field_info['machine_name'])));
     $this->assertUserHasPermission($this->limited_user, 'edit ' . $field_info['machine_name'], t('Limited user does have "edit @field" permission.', array('@field' => $field_info['machine_name'])));
 
@@ -275,7 +275,7 @@ class FieldPermissionsTestCase extends BackdropWebTestCase {
       'fields[_add_new_field][type]' => 'text',
       'fields[_add_new_field][widget_type]' => 'text_textfield',
     );
-    $this->backdropPost('admin/config/people/accounts/fields',  $edit, t('Save'));
+    $this->backdropPost('admin/config/people/manage/fields',  $edit, t('Save'));
     $this->backdropPost(NULL, array(), t('Save field settings'));
     $edit = array(
       'field[field_permissions][type]' => 2,
@@ -319,7 +319,7 @@ class FieldPermissionsTestCase extends BackdropWebTestCase {
     // the permissions via the UI (i.e., in a different thread than the one
     // running the tests).
     backdrop_static_reset('user_access');
-    backdrop_static_reset('user_rid_permissions');
+    backdrop_static_reset('user_roles');
 
     // Load the full user account, since we may have been provided an out of
     // date pseudo-account of the kind SimpleTest uses (e.g. as returned by

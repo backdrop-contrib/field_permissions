@@ -1,0 +1,5 @@
+[FieldPermissionsTestCase]
+name = Field Permissions module tests
+description = Tests the Field Permissions module.
+group = Field permissions
+file = field_permissions.test
