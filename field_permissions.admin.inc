@@ -286,7 +286,7 @@ function field_permissions_permissions_matrix($field, $instance) {
   }
 
   // Attach the default permissions page JavaScript.
-  $form['#attached']['js'][] = backdrop_get_path('module', 'user') . '/user.permissions.js';
+  $form['#attached']['js'][] = backdrop_get_path('module', 'user') . '/js/user.permissions.js';
 
   // Attach our custom JavaScript for the permission matrix.
   $form['#attached']['js'][] = backdrop_get_path('module', 'field_permissions') . '/field_permissions.admin.js';
