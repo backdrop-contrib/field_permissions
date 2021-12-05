@@ -83,7 +83,7 @@ complete text.
 Maintainers
 -----------
 
-Looking for maintainers
+[Robert J. Lang (bugfolder)](https://github.com/bugfolder)
 
 Credits
 -----------
