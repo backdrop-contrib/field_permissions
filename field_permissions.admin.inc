@@ -385,7 +385,7 @@ function field_permissions_overview() {
             // This is a field with custom permissions. Link the field to the
             // appropriate row of the permissions page, and theme it based on
             // whether all users have access.
-            $all_users_have_access = isset($role_permissions[BACKDROP_ANONYMOUS_ROLE][$permission]) && isset($role_permissions[BACKDROP_AUTHENTICATED_RID][$permission]);
+            $all_users_have_access = isset($role_permissions[BACKDROP_ANONYMOUS_ROLE][$permission]) && isset($role_permissions[BACKDROP_AUTHENTICATED_ROLE][$permission]);
             $status_class = $all_users_have_access ? 'field-permissions-status-on' : 'field-permissions-status-off';
             $title = $all_users_have_access ? t('All users have this permission') : t('Not all users have this permission');
             $data = l('', 'admin/people/permissions', array(
