@@ -230,7 +230,7 @@ function field_permissions_permissions_matrix($field, $instance) {
     $reset_permissions_defaults = TRUE;
   }
   elseif ($field['settings']['field_permissions']['type'] != FIELD_PERMISSIONS_CUSTOM) {
-    $all_assigned_permissions = call_user_func_array('array_merge_recursive', $role_permissions);
+    $all_assigned_permissions = call_user_func_array('array_merge_recursive', array_values($role_permissions));
     $assigned_field_permissions = array_intersect_key($all_assigned_permissions, $field_permissions);
     $reset_permissions_defaults = empty($assigned_field_permissions);
   }
