@@ -245,6 +245,7 @@ function field_permissions_permissions_matrix($field, $instance) {
     $form['permission'][$permission] = array(
       '#type' => 'item',
       '#markup' => $info['title'],
+      '#description' => $info['description'],
     );
     // Save it to be displayed as one of the role checkboxes.
     $options[$permission] = '';
