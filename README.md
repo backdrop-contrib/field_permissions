@@ -64,6 +64,11 @@ Installation
 
 5) Get an overview of the Field Permissions at Administer > Reports > Fields > Permissions (path admin/reports/fields/permissions).
 
+Related Modules
+---------------
+
+The [Field Readonly](https://backdropcms.org/project/field_readonly) module adds the additional ability to display a field but not allow editing on edit forms.
+
 Issues
 ------
 
